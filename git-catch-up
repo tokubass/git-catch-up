@@ -1,0 +1,139 @@
+#!/usr/bin/env perl
+
+=head1 NAME
+
+ git-catch-up
+
+=head1 SYNOPSIS
+
+ For example, current branch name is "proto".
+ This command performs the following processings in order. 
+
+ git stash
+ git checkout master
+ git pull upstream master
+ git checkout proto
+ git rebase master proto
+ git stash pop
+
+=head1 USAGE
+
+ * First, copy this script to under git-core directory.
+
+ git catch-up [option]
+
+     -v, --verbose   be verbose
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use Getopt::Long qw/ :config  no_ignore_case /;
+use 
+use IPC::Run qw/ timeout /;
+use subs qw/stash checkout_master rebase/;
+
+my $OPT_V = '';
+my $GIT = ( eval { require File::Which; } ) ? which('git') : 'git';
+my $START_BRANCH = current_branch();
+
+&main();
+exit;
+
+sub main {
+    local $\ = "\n";
+
+    GetOptions(
+        "v|verbose" => \$OPT_V,
+    ) or die 'opt error';
+
+
+    my $upstream_name = shift @ARGV || 'upstream';
+
+    my $pull = sub {
+        print sprintf("current branch is %s", current_branch() ) if $OPT_V;
+        git_run( 'pull', $upstream_name, 'master' );
+    };
+    my $rebase = sub {
+        git_run( 'rebase', 'master', $START_BRANCH );
+    };
+
+    sub_wrapper(
+        stash,
+        sub {}, $rebase,
+        checkout_master,
+        $pull,
+    );
+
+}
+
+sub sub_wrapper {
+    my $i = 0;
+
+    while ($i < @_) {
+        $_[$i]->();
+        $i += 2;
+    }
+
+    $i = @_ - 2;
+    while (0 < $i) {
+        $_[$i]->();
+        $i -= 2;
+    }
+}
+
+sub stash {
+    sub {
+        git_run( 'stash' );
+    },
+    sub {
+        git_run( 'stash', 'pop' );
+    },
+}
+
+sub checkout_master {
+    sub {
+        if ( $START_BRANCH ne 'master') {
+            git_run( 'checkout', 'master' );
+        }
+    },
+    sub {
+        if ( $START_BRANCH ne 'master') {
+            git_run( 'checkout', $START_BRANCH );
+        }
+    },
+}
+
+sub current_branch {
+    my $branch_res = git_run('branch');
+    my $out = $branch_res->{out} or die 'failed git branch command';
+
+    if ( my ($current_branch) = ($out =~ /^\* ([^\n]+)/m) ) {
+        return $current_branch;
+    } else {
+        die 'current branch not found';
+    }
+}
+
+
+sub git_run {
+    my @cmd = @_ or croak 'please input git command name';
+    unshift @cmd, $GIT;
+
+    IPC::Run::run(
+        \@cmd,
+        \my $in,
+        \my $out,
+        \my $err,
+        timeout(10)
+    );
+
+    print "@cmd" if $OPT_V;
+
+    return { in => $in, out => $out, err => $err, cmd => join(' ', @cmd) };
+}
+
+
+__END__
+

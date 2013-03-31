@@ -1,0 +1,26 @@
+=shead1 NAME
+
+ git-catch-up
+
+=head1 SYNOPSIS
+
+ For example, current branch name is "proto".
+ This command performs the following processings in order. 
+
+ git stash
+ git checkout master
+ git pull upstream master
+ git checkout proto
+ git rebase master proto
+ git stash pop
+
+=head1 USAGE
+
+ * First, copy this script to under git-core directory.
+
+ git catch-up [option]
+
+     -v, --verbose   be verbose
+
+
+=cut
