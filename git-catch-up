@@ -6,7 +6,7 @@
 
 =head1 SYNOPSIS
 
- For example, current branch name is "proto".
+ For example, current branch name is "proto" and remote repository name is "upstream".
  This command performs the following processings in order. 
 
  git stash
@@ -20,8 +20,7 @@
 
  * First, copy this script to under git-core directory.
 
- git catch-up [option]
-
+ git catch-up [option] [remote_repository_name]
      -v, --verbose   be verbose
 
 =cut
