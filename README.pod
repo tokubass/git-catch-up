@@ -1,4 +1,4 @@
-=shead1 NAME
+=head1 NAME
 
  git-catch-up
 

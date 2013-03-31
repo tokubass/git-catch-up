@@ -30,12 +30,11 @@ use strict;
 use warnings;
 use Carp;
 use Getopt::Long qw/ :config  no_ignore_case /;
-use 
 use IPC::Run qw/ timeout /;
 use subs qw/stash checkout_master rebase/;
 
 my $OPT_V = '';
-my $GIT = ( eval { require File::Which; } ) ? which('git') : 'git';
+my $GIT = ( eval { require File::Which; } ) ? File::Which::which('git') : 'git';
 my $START_BRANCH = current_branch();
 
 &main();
