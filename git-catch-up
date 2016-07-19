@@ -9,9 +9,9 @@
  For example, current branch name is "proto" and remote repository name is "upstream".
  This command performs the following processings in order. 
 
- git stash
+ git stash -u
  git checkout master
- git pull upstream master
+ git pull --ff-only upstream master
  git checkout proto
  git rebase master proto
  git stash pop
